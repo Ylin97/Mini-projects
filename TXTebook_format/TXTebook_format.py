@@ -2,7 +2,7 @@
 
 
 """
-# Usage: python ./TXTbook_format.py
+# Usage: python ./TXTebook_format.py
 """
 
 import re
@@ -47,20 +47,30 @@ def remove_extra_line_break(filename):
                 text_str2 = origin_file.readline()
             # 写入最后一行
             if text_str1:
-                split_paragraph(new_file, text_str1)
+                # split_paragraph(new_file, text_str1)
+                new_file.write('    '+ text_str1 + '\n')
     # 移除临时文件
     os.remove(tmp_file)
                 
 
 def deal_line(new_file, text_str1, text_str2):
     """行合并和段落拆分"""
-    if isparagraph_break(text_str1):
+    text_str2 = text_str2.strip()
+    len_text_str2 = len(text_str2)
+    # if len_text_str2 > 3 and len(set(text_str2)) == 1: # 处理 ***** 这类分割线
+    #     return True
+    if len_text_str2 > 3 and str(text_str2[0:3]) == str(text_str2[-3:]): # 处理 ***Text*** 这类分割线
         new_file.write('    '+ text_str1 + '\n')
-        text_str1 = text_str2.strip()
+        new_file.write('    '+ text_str2 + '\n')
+        return ""
     else:
-        text_str1 += text_str2.strip()
+        if isparagraph_break(text_str1):
+            new_file.write('    '+ text_str1 + '\n')
+            text_str1 = text_str2
+        else:
+            text_str1 += text_str2
 
-    return text_str1
+        return split_paragraph(new_file, text_str1)
 
 
 def deal_chapter_name(new_file, text_str1, text_str2, ishead=False):
@@ -73,7 +83,7 @@ def deal_chapter_name(new_file, text_str1, text_str2, ishead=False):
         # 第一章章节名    
         if ishead:
             write_chapter_name(new_file, tmp_str, True)
-            ishead = False
+            # ishead = False
         else:
             write_chapter_name(new_file, tmp_str)
         text_str2 = ""
@@ -83,11 +93,14 @@ def deal_chapter_name(new_file, text_str1, text_str2, ishead=False):
 
 def isparagraph_break(text_str):
     """判断结尾标点是否为中英句号、感叹号、反引号和省略号"""
+    text_str = text_str.strip()
+    len_text_str = len(text_str)
+    # print(str(text_str[0:3]), str(text_str[-3:]))
     if not text_str:
         return False
     else:
         st = text_str[-1:]
-        if re.match(r'[.。"”」!！…?？]', st):
+        if re.match(r'[\.\。\"\”\」\!\！\…\?\？]', st):
             return True
         else:
             return False
@@ -112,22 +125,36 @@ def write_chapter_name(new_file, chapter_name, ishead=False):
 def split_paragraph(new_file, text_str):
     """将长度超过100的段落拆分并写入文件"""
     temp_str = ""
-    is_left_ellipsis = True
-    re_punctuation = re.compile(r'^[.。"”」!！…?？]')
-    for st in text_str:
-        if st == '…' and is_left_ellipsis:
-            temp_str += st
-            is_left_ellipsis = False
-        elif re.match(re_punctuation, st) and len(temp_str) > 100:
-            temp_str += st
-            new_file.write('    '+ temp_str + '\n')
-            temp_str = ""
-            flag = 0
-        else:
-            temp_str += st
+    # is_left_ellipsis = True
+    len_text_str = len(text_str)
+    if len_text_str < 100:
+        return text_str
+    else:
+        count = 0
+        re_punctuations1 = re.compile(r'[\.\。\"\”\」\!\！\…\?\？\)\）]')
+        re_punctuations2 = re.compile(r'[\.\。\!\！\…\)\）]')
+        re_punctuations3 = re.compile(r'\"\”\」\)\）')
+        for st in text_str:
+            # 处理 …… 。。。。 ....这类符号序列
+            count += 1
+            if re.match(re_punctuations2, st) and count < len_text_str\
+                and re.match(re_punctuations2, text_str[count]):
+                # print(text_str[text_str.index(st) + 1])
+                temp_str += st
+                # is_left_ellipsis = False
+            elif re.match(re_punctuations1, st) and re.match(re_punctuations3, text_str[count:count+4])\
+                and len(temp_str) > 100:
+                temp_str += st
+                new_file.write('    '+ temp_str + '\n')
+                temp_str = ""
+                # flag = 0
+            else:
+                temp_str += st
+            # print("len_temp_str = %d" % len(temp_str))
 
-    if temp_str:
-        new_file.write('    '+ temp_str + '\n')
+    # if temp_str:
+    #     new_file.write('    '+ temp_str + '\n')
+    return temp_str
 
 
 def detect_encoding(filepath):
