@@ -2,7 +2,7 @@
 
 
 """
-# Usage: python ./TXTebook_format.py
+# Usage: python ./TXTebook_formatter.py
 """
 
 import re
