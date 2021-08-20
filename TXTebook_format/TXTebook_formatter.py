@@ -17,7 +17,7 @@ def run():
     """删除文本文件中的多余换行符"""
     # 获取文件名
     filename = get_filename()
-    # filename_str = '111.txt'
+    # filename = '111.txt'
     # 转换编码
     file_to_utf8(filename)
     # 处理文件
@@ -26,8 +26,8 @@ def run():
 
 def get_filename():
     """从用户输入中获取文件名"""
-    filename_str = input("请输入文件名或文件路径(例如：111.txt or ~/111.txt)：\n")
-    return filename_str
+    filename = input("请输入文件名或文件路径(例如：111.txt or ~/111.txt)：\n")
+    return filename
 
 
 def remove_extra_line_break(filename):
@@ -57,8 +57,12 @@ def deal_line(new_file, text_str1, text_str2):
     """行合并和段落拆分"""
     text_str2 = text_str2.strip()
     len_text_str2 = len(text_str2)
-    # if len_text_str2 > 3 and len(set(text_str2)) == 1: # 处理 ***** 这类分割线
-    #     return True
+    
+    if len_text_str2 > 3 and len(set(text_str2)) == 1: # 处理 ***** 这类分割线
+        st = list(set(text_str2))[0]
+        new_file.write('    '+ st * 24 + '\n')
+        return ""
+    
     if len_text_str2 > 3 and str(text_str2[0:3]) == str(text_str2[-3:]): # 处理 ***Text*** 这类分割线
         new_file.write('    '+ text_str1 + '\n')
         new_file.write('    '+ text_str2 + '\n')
@@ -94,13 +98,11 @@ def deal_chapter_name(new_file, text_str1, text_str2, ishead=False):
 def isparagraph_break(text_str):
     """判断结尾标点是否为中英句号、感叹号、反引号和省略号"""
     text_str = text_str.strip()
-    len_text_str = len(text_str)
-    # print(str(text_str[0:3]), str(text_str[-3:]))
     if not text_str:
         return False
     else:
         st = text_str[-1:]
-        if re.match(r'[\.\。\"\”\」\!\！\…\?\？]', st):
+        if re.match(r'[\.\。\"\”\」\』\!\！\…\?\？]', st):
             return True
         else:
             return False
@@ -125,35 +127,50 @@ def write_chapter_name(new_file, chapter_name, ishead=False):
 def split_paragraph(new_file, text_str):
     """将长度超过100的段落拆分并写入文件"""
     temp_str = ""
-    # is_left_ellipsis = True
     len_text_str = len(text_str)
     if len_text_str < 100:
         return text_str
     else:
         count = 0
-        re_punctuations1 = re.compile(r'[\.\。\"\”\」\!\！\…\?\？\)\）]')
-        re_punctuations2 = re.compile(r'[\.\。\!\！\…\)\）]')
-        re_punctuations3 = re.compile(r'\"\”\」\)\）')
+        re_punctuations1 = re.compile(r'[\.\。\"\”\」\』\!\！\…\?\？\,\，]')
+        re_punctuations2 = re.compile(r'[\.\。\!\！\…\?\？]')
+        re_punctuations3 = re.compile(r'[\"\”\」\』]')
+        re_punctuations4 = re.compile(r'[\,\，]')
+        flag = 0
         for st in text_str:
-            # 处理 …… 。。。。 ....这类符号序列
             count += 1
+            # 处理 …… 。。 ...!!!???这类符号序列
             if re.match(re_punctuations2, st) and count < len_text_str\
                 and re.match(re_punctuations2, text_str[count]):
-                # print(text_str[text_str.index(st) + 1])
                 temp_str += st
-                # is_left_ellipsis = False
-            elif re.match(re_punctuations1, st) and re.match(re_punctuations3, text_str[count:count+4])\
-                and len(temp_str) > 100:
-                temp_str += st
-                new_file.write('    '+ temp_str + '\n')
-                temp_str = ""
-                # flag = 0
+            # 处理可能的分段符号
+            elif re.match(re_punctuations1, st) and len(temp_str) > 100: 
+                if count == len_text_str:
+                    new_file.write('    '+ temp_str + st + '\n')
+                    temp_str = ""
+                else:
+                    # 处理不属于引号的情况
+                    if re.match(re_punctuations2, st) and not re.match(re_punctuations3, text_str[count]):
+                        new_file.write('    '+ temp_str + st + '\n')
+                        temp_str = ""
+                    # 处理属于引号的情况，如 ....愿我如星君如月，夜夜流光相皎洁。”
+                    elif re.match(re_punctuations2, st) and re.match(re_punctuations3, text_str[count]):
+                        temp_str += st
+                    elif re.match(re_punctuations3, st) and not re.match(re_punctuations4, text_str[count]):
+                        new_file.write('    '+ temp_str + st + '\n')
+                        temp_str = ""
+                    # 处理 ...当时年少青衫薄”，他惆怅着说道，... 这种情况
+                    elif re.match(re_punctuations3, st) and re.match(re_punctuations4, text_str[count]):
+                        temp_str += st
+                        flag = 1
+                    elif flag == 1:
+                        new_file.write('    '+ temp_str + st + '\n')
+                        temp_str = ""
+                        flag = 0
+                    else:
+                        temp_str += st
             else:
                 temp_str += st
-            # print("len_temp_str = %d" % len(temp_str))
-
-    # if temp_str:
-    #     new_file.write('    '+ temp_str + '\n')
     return temp_str
 
 
