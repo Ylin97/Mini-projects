@@ -128,7 +128,7 @@ def split_paragraph(new_file, text_str):
     """将长度超过100的段落拆分并写入文件"""
     temp_str = ""
     len_text_str = len(text_str)
-    if len_text_str < 100:
+    if len_text_str <= 100:
         return text_str
     else:
         count = 0
