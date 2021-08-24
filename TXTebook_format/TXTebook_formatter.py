@@ -32,7 +32,7 @@ def get_filename():
 
 def remove_extra_line_break(filename):
     """删除文件中多余的换行符"""
-    tmp_file = 'tmp_' + filename
+    tmp_file = filename[:-4] + '_tmp' + filename[-4:]
     with open(tmp_file, "r", encoding="utf-8") as origin_file:
         with open(filename, "w", encoding="utf-8") as new_file:
             text_str1 = origin_file.readline()
@@ -207,7 +207,7 @@ def detect_encoding(filepath):
 
 def file_to_utf8(filename):
     """将文件编码转为utf-8"""
-    tmp_file = 'tmp_' + filename
+    tmp_file = filename[:-4] + '_tmp' + filename[-4:]
     copy2(filename, tmp_file)
     old_file = filename[:-4] + '_old' + filename[-4:]
     os.rename(filename, old_file)
