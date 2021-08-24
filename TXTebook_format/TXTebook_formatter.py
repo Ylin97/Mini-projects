@@ -2,7 +2,7 @@
 
 
 """
-# Usage: python ./TXTebook_formatter.py
+# Usage: python ./TXTebook_format.py
 """
 
 import re
@@ -102,7 +102,9 @@ def isparagraph_break(text_str):
         return False
     else:
         st = text_str[-1:]
-        if re.match(r'[\.\。\"\”\」\』\!\！\…\?\？]', st):
+        if len(text_str)>= 2 and text_str[-2:] == "……":
+            return True
+        elif re.match(r'[\.\。\"\”\」\』\!\！\?\？\:\:]', st):
             return True
         else:
             return False
@@ -132,9 +134,9 @@ def split_paragraph(new_file, text_str):
         return text_str
     else:
         count = 0
-        re_punctuations1 = re.compile(r'[\.\。\"\”\」\』\!\！\…\?\？\,\，]')
+        re_punctuations1 = re.compile(r'[\.\。\"\”\」\』\!\！\…\?\？\,\，\:\：]')
         re_punctuations2 = re.compile(r'[\.\。\!\！\…\?\？]')
-        re_punctuations3 = re.compile(r'[\"\”\」\』]')
+        re_punctuations3 = re.compile(r'[\"\”\」\』\:\：]')
         re_punctuations4 = re.compile(r'[\,\，]')
         flag = 0
         for st in text_str:
@@ -145,10 +147,10 @@ def split_paragraph(new_file, text_str):
                 temp_str += st
             # 处理可能的分段符号
             elif re.match(re_punctuations1, st) and len(temp_str) > 100: 
-                if count == len_text_str:
+                if count == len_text_str and re.match(re_punctuations3, st):
                     new_file.write('    '+ temp_str + st + '\n')
                     temp_str = ""
-                else:
+                elif count < len_text_str:
                     # 处理不属于引号的情况
                     if re.match(re_punctuations2, st) and not re.match(re_punctuations3, text_str[count]):
                         new_file.write('    '+ temp_str + st + '\n')
@@ -169,6 +171,8 @@ def split_paragraph(new_file, text_str):
                         flag = 0
                     else:
                         temp_str += st
+                else:
+                    temp_str += st
             else:
                 temp_str += st
     return temp_str
