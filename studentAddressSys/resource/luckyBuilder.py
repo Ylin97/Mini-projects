@@ -9,10 +9,12 @@ Usage: python build.py [OPTION]... [FILE]...
 e.g. python buil.py -o main -e gbk
 
 OPTION:
-    -o, --ofile <filename>                    : 最后生成的可执行文件名 (默认为 main)
-    -e, --encode <encoding>                   : 指定字符编码 (默认为 utf-8, 在Windows系统中生成的
-                                                可执行文件中的中文字符可能会乱码, 此时可以尝试指定为 gbk)
-    -h, --help                                : 显示帮助信息
+    -c, --compiler <compiler name>   : 编译器名(默认: g++)            
+    -o, --outfile <filename>         : 最后生成的可执行文件名 (默认: main)
+    -e, --encode <encoding>          : 指定字符编码 (默认: utf-8, 在Windows系统中生成的
+                                       可执行文件中的中文字符可能会乱码, 此时可以尝试指定为 gbk)
+    -g, --debug                      : 是否为生成的可执行文件添加调试信息 (对应 g++ 的 '-g' 选项, 默认: false)
+    -h, --help                       : 显示帮助信息
 """
           
 
